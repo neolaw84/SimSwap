@@ -25,6 +25,11 @@ class TestOptions(BaseOptions):
         self.parser.add_argument("--Arc_path", type=str, default='models/BEST_checkpoint.tar', help="run ONNX model via TRT")
         self.parser.add_argument("--pic_a_path", type=str, default='./crop_224/gdg.jpg', help="Person who provides identity information")
         self.parser.add_argument("--pic_b_path", type=str, default='./crop_224/zrf.jpg', help="Person who provides information other than their identity")
+
+        self.parser.add_argument("--dir_to_dir", action="store_true", help="Whether pic_b_dir_path is present.")
+        self.parser.add_argument("--pic_b_dir_path", type=str, default="./crop_224/", help="Images which provide information other than identity")
+        self.parser.add_argument("--output_dir_path", default="./output/", type=str, help="It is to loop through all images here")
+        
         self.parser.add_argument("--pic_specific_path", type=str, default='./crop_224/zrf.jpg', help="The specific person to be swapped")
         self.parser.add_argument("--multisepcific_dir", type=str, default='./demo_file/multispecific', help="Dir for multi specific")
         self.parser.add_argument("--video_path", type=str, default='./demo_file/multi_people_1080p.mp4', help="path for the video to swap")
