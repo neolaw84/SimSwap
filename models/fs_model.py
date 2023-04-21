@@ -60,12 +60,17 @@ class fsModel(BaseModel):
         self.netG.to(device)
 
         # Id network
-        netArc_checkpoint = opt.Arc_path
-        netArc_checkpoint = torch.load(netArc_checkpoint, map_location=torch.device("cpu"))
-        self.netArc = netArc_checkpoint
-        self.netArc = self.netArc.to(device)
-        self.netArc.eval()
+        # netArc_checkpoint = opt.Arc_path
+        # netArc_checkpoint = torch.load(netArc_checkpoint)
+        # self.netArc = netArc_checkpoint['model'].module
+        # self.netArc = self.netArc.to(device)
+        # self.netArc.eval()
 
+        # fix for newer insightface
+        from insightface.app import FaceAnalysis
+        self.netArc = FaceAnalysis(name="buffalo_l", providers=['CUDAExecutionProvider', 'CPUExecutionProvider'])
+        self.netArc.prepare(ctx_id=0, det_size=(640, 640))
+        
         if not self.isTrain:
             pretrained_path = '' if not self.isTrain else opt.load_pretrain
             self.load_network(self.netG, 'G', opt.which_epoch, pretrained_path)
@@ -197,12 +202,20 @@ class fsModel(BaseModel):
 
 
         #G_ID
-        img_fake_down = F.interpolate(img_fake, size=(112,112))
+        #img_fake_down = F.interpolate(img_fake, size=(112,112))
+        img_fake_down = F.interpolate(img_fake, size=(224,224))
         img_fake_down = self.spNorm(img_fake_down)
-        latent_fake = self.netArc(img_fake_down)
+        
+        # latent_fake = self.netArc(img_fake_down)
+
+        # make sure new insightface would work
+        
+        latent_fake = self.netArc.get(img_fake_down)
+        latent_fake = np.array([lid["embedding"] for lid in latent_fake.cpu()]).copy()
+
         loss_G_ID = (1 - self.cosin_metric(latent_fake, latent_id))
-        #print('=====================G_ID========================')
-        #print(loss_G_ID)
+        print('=====================G_ID========================')
+        print(loss_G_ID)
 
         #G_Rec
         loss_G_Rec = self.criterionRec(img_fake, img_att) * self.opt.lambda_rec
